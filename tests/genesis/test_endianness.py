@@ -19,9 +19,13 @@ def expected_endianness_output():
     return b'\x01\x00\x03\x02\x05\x04\x07\x06\t\x08\x0b\n\r\x0c\x0f\x0e'
 
 
-def test_in_file_not_even(genesis):
+test_stream_sizes = [n for n in range(255, 1000, 100)]
+
+
+@pytest.mark.parametrize("stream_sizes", test_stream_sizes)
+def test_in_stream_not_even(genesis, stream_sizes):
     # create an input stream with an odd number of bytes
-    in_stream = io.BytesIO(bytes([n for n in range(55)]))
+    in_stream = io.BytesIO(bytes([0xFF for n in range(stream_sizes)]))
     out_stream = io.BytesIO()
     with pytest.raises(ValueError):
         genesis.convert_endianness(in_stream, out_stream)
