@@ -1,5 +1,5 @@
 import pytest
-import os
+import io
 
 from src.systems.genesis import Genesis
 
@@ -10,46 +10,31 @@ def genesis():
 
 
 @pytest.fixture
-def input_file():
-    in_file = "tests/in.bin"
-    with open(in_file, "wb") as f:
-        pass
-    yield in_file
-    os.remove(in_file)
+def input_endianness_pattern():
+    return bytes([n for n in range(16)])
 
 
 @pytest.fixture
-def output_file():
-    out_file = "tests/out.bin"
-    yield out_file
-    try:
-        os.remove(out_file)
-    except OSError:
-        # just ignore, not all fixture uses result in an out.bin file being created
-        pass
+def expected_endianness_output():
+    return b'\x01\x00\x03\x02\x05\x04\x07\x06\t\x08\x0b\n\r\x0c\x0f\x0e'
 
 
-def test_in_file_not_found(genesis):
-    with pytest.raises(OSError):
-        genesis.convert_endianness("fake_file.bin", "outfile.bin")
-
-
-def test_in_file_not_even(genesis, input_file, output_file):
-    with open(input_file, "wb") as f:
-        f.write(bytes([n for n in range(17)]))
+def test_in_file_not_even(genesis):
+    # create an input stream with an odd number of bytes
+    in_stream = io.BytesIO(bytes([n for n in range(55)]))
+    out_stream = io.BytesIO()
     with pytest.raises(ValueError):
-        genesis.convert_endianness(input_file, output_file)
+        genesis.convert_endianness(in_stream, out_stream)
 
 
-def test_in_file_equals_out_file(genesis, input_file):
-    with pytest.raises(ValueError):
-        genesis.convert_endianness(input_file, input_file)
+def test_endianness(genesis, input_endianness_pattern, expected_endianness_output):
+    in_stream = io.BytesIO(input_endianness_pattern)
+    out_stream = io.BytesIO()
+    genesis.convert_endianness(in_stream, out_stream)
+    # get size of outstream
+    out_stream_size = out_stream.getbuffer().nbytes
+    out_stream.seek(0)
+    assert out_stream.read(out_stream_size) == expected_endianness_output
 
 
-def test_endianness(genesis, input_file, output_file):
-    with open(input_file, "wb") as f:
-        f.write(bytes([n for n in range(16)]))
-    genesis.convert_endianness(input_file, output_file)
-    with open(output_file, "rb") as f:
-        assert f.read(16) == b'\x01\x00\x03\x02\x05\x04\x07\x06\t\x08\x0b\n\r\x0c\x0f\x0e'
 

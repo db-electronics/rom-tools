@@ -17,47 +17,41 @@ class Genesis:
         pass
 
     @staticmethod
-    def convert_endianness(in_file: str, out_file: str):
+    def convert_endianness(in_stream, out_stream):
 
-        if in_file == out_file:
-            raise ValueError("cannot override out_file with in_file")
+        # size of input stream
+        rom_size = in_stream.getbuffer().nbytes
 
-        # check if ifile size exists
-        if not os.path.isfile(in_file):
-            raise OSError("file '{}' does not exist".format(in_file))
-
-        file_size = os.path.getsize(in_file)
-        if file_size % 2 != 0:
-            raise ValueError("file {} of size {} must have an even number of bytes".format(in_file, file_size))
+        if rom_size % 2 != 0:
+            raise ValueError("ROM file must have an even number of bytes")
 
         pos = 0
+        in_stream.seek(0)
+        out_stream.seek(0)
 
-        try:
-            os.remove(out_file)
-        except OSError:
-            pass
+        while pos < rom_size:
+            bad_endian = in_stream.read(2)
+            rev_endian = struct.pack('<h', *struct.unpack('>h', bad_endian))
+            out_stream.write(rev_endian)
+            pos += 2
 
-        with open(out_file, "wb+") as fwrite, open(in_file, "rb") as fread:
-            while pos < file_size:
-                bad_endian = fread.read(2)
-                rev_endian = struct.pack('<h', *struct.unpack('>h', bad_endian))
-                fwrite.write(rev_endian)
-                pos += 2
+    def calculate_checksum(self, in_stream):
 
-    def calculate_checksum(self, instream, rom_size):
+        # size of input stream
+        rom_size = in_stream.getbuffer().nbytes
 
         # Genesis checksums start after the header
         pos = Genesis.rom_start_address
         self.checksum_calculated = 0
 
         # read the ROM header's checksum value
-        instream.seek(Genesis.header_checksum_address, 0)
-        data = instream.read(2)
+        in_stream.seek(Genesis.header_checksum_address, 0)
+        data = in_stream.read(2)
         wdata = data[0], data[1]
         self.checksum_in_rom = int.from_bytes(wdata, byteorder="big")
 
         # jump ahead to of ROM header
-        instream.seek(Genesis.rom_start_address, 0)
+        in_stream.seek(Genesis.rom_start_address, 0)
 
         while pos < rom_size:
             if (rom_size - pos) >= Genesis.file_read_chunk_size:
@@ -65,7 +59,7 @@ class Genesis:
             else:
                 read_size = (rom_size - pos)
 
-            data = instream.read(read_size)
+            data = in_stream.read(read_size)
 
             i = 0
             while i < read_size and i + 1 < read_size:
@@ -75,3 +69,5 @@ class Genesis:
                 i += 2
 
             pos += read_size
+
+        return self.checksum_calculated
