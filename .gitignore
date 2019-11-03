@@ -1,3 +1,4 @@
+src/systems/__pycache__/
 .pytest_cache/
 .idea/
 

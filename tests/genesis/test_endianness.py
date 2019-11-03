@@ -6,6 +6,11 @@ from src.systems.genesis import Genesis
 
 
 @pytest.fixture
+def rom_header_file():
+    return "tests/genesis/rom_header.bin"
+
+
+@pytest.fixture
 def input_endianness_pattern():
     return bytes([n for n in range(16)])
 
@@ -26,16 +31,16 @@ def test_in_stream_not_even(stream_sizes):
         cart.convert_endianness(out_stream)
 
 
-@pytest.mark.skip("WIP")
-def test_endianness(input_endianness_pattern, expected_endianness_output):
-    in_stream = io.BytesIO(input_endianness_pattern)
+# @pytest.mark.skip("WIP")
+def test_endianness(rom_header_file, input_endianness_pattern, expected_endianness_output):
+    cart = Genesis.create_from_file(rom_header_file)
+    cart.write_rom(input_endianness_pattern)
     out_stream = io.BytesIO()
-    cart = Genesis.create_from_stream(in_stream)
     cart.convert_endianness(out_stream)
     # get size of outstream
-    out_stream_size = out_stream.getbuffer().nbytes
-    out_stream.seek(0)
-    assert out_stream.read(out_stream_size) == expected_endianness_output
+    compare_size = out_stream.getbuffer().nbytes - Genesis.header_size
+    out_stream.seek(Genesis.rom_start_address)
+    assert out_stream.read(compare_size) == expected_endianness_output
 
 
 
