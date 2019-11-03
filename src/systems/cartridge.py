@@ -3,16 +3,14 @@ import os
 import hashlib
 
 
-#  Cartridge
-#
-#  A generic cartridge class to handle common operations for all ROM/cartridge types
 class Cartridge:
+    """A generic cartridge class to handle common operations for all ROM/cartridge types
+    """
+    def __init__(self, rom_stream=None):
+        self.rom_stream = rom_stream
 
-    def __init__(self, input_stream=None):
-        print("cart init")
-        self.in_stream = input_stream
         try:
-            self._rom_size = input_stream.getbuffer().nbytes
+            self._rom_size = rom_stream.getbuffer().nbytes
         except AttributeError:
             self._rom_size = 0
 
@@ -22,13 +20,19 @@ class Cartridge:
         self._checksum_in_rom = 0
         self._header = {}
 
+        self.calculate_md5()
+
     @classmethod
-    def from_file(cls, file_name):
+    def create_from_file(cls, file_name):
         rom_size = os.path.getsize(file_name)
         in_stream = io.BytesIO()
         with open(file_name, "rb") as f:
             in_stream.write(f.read(rom_size))
         return cls(in_stream)
+
+    @classmethod
+    def create_from_stream(cls, stream):
+        return cls(stream)
 
     @property
     def rom_size(self):
@@ -54,11 +58,28 @@ class Cartridge:
     def md5_bytes(self):
         return self._md5_bytes
 
+    def read_rom(self, size=None, address=None):
+        if size is None:
+            size = 1
+        if address is None:
+            return self.rom_stream.read(size)
+        else:
+            self.rom_stream.seek(address)
+            return self.rom_stream.read(size)
+
+    def write_rom(self, data, address=None):
+        if address is None:
+            self.rom_stream.write(data)
+        else:
+            self.rom_stream.seek(address)
+            self.rom_stream.write(data)
+        self._rom_size = self.rom_stream.getbuffer().nbytes
+
     def calculate_md5(self):
-        if self.in_stream is not None:
-            self.in_stream.seek(0)
+        if self.rom_stream is not None:
+            self.rom_stream.seek(0)
             hash_md5 = hashlib.md5()
-            for chunk in iter(lambda: self.in_stream.read(4096), b""):
+            for chunk in iter(lambda: self.rom_stream.read(1024), b""):
                 hash_md5.update(chunk)
             # packed bytes
             self._md5_bytes = hash_md5.digest()

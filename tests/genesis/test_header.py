@@ -4,21 +4,10 @@ import os
 
 from src.systems.genesis import Genesis
 
-rom_file_240p = "tests/genesis/240p.bin"
-
 
 @pytest.fixture
-def genesis():
-    return Genesis()
-
-
-@pytest.fixture
-def in_stream_240p():
-    rom_size = os.path.getsize(rom_file_240p)
-    in_stream = io.BytesIO()
-    with open(rom_file_240p, "rb") as f:
-        in_stream.write(f.read(rom_size))
-    return in_stream
+def rom_file_240p():
+    return "tests/genesis/240p.bin"
 
 
 @pytest.fixture
@@ -42,8 +31,6 @@ def header_result_240p():
             'Serial Number': 'GM 00002501-14'}
 
 
-def test_get_header(genesis, in_stream_240p, header_result_240p):
-    in_stream_240p.seek(Genesis.header_start_address)
-    header_stream = io.BytesIO()
-    header_stream.write(in_stream_240p.read(Genesis.header_size))
-    assert genesis.get_header(header_stream) == header_result_240p
+def test_read_header(rom_file_240p, header_result_240p):
+    cart = Genesis.create_from_file(rom_file_240p)
+    assert cart.header == header_result_240p
