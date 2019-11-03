@@ -1,8 +1,10 @@
 import os
+import io
 import struct
+from src.systems.cartridge import Cartridge
 
 
-class Genesis:
+class Genesis(Cartridge):
 
     header_start_address = 0x100
     header_checksum_address = 0x18E
@@ -11,23 +13,9 @@ class Genesis:
 
     file_read_chunk_size = 1024
 
-    def __init__(self):
-        self._checksum_calculated = 0
-        self._checksum_in_rom = 0
-        self._header = {}
-        pass
-
-    @property
-    def checksum_calculated(self):
-        return self._checksum_calculated
-
-    @property
-    def checksum_in_rom(self):
-        return self._checksum_in_rom
-
-    @property
-    def header(self):
-        return self._header
+    def __init__(self, *args, **kwargs):
+        print("genesis init")
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def convert_endianness(in_stream, out_stream):
