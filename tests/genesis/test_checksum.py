@@ -25,3 +25,7 @@ def test_checksum_bad_calculation(rom_file_240p, junk_length):
     # recalculate checksum
     cart.calculate_checksum()
     assert cart.checksum_in_rom != cart.checksum_calculated
+
+
+def test_empty_file():
+    empty_stream = io.BytesIO()

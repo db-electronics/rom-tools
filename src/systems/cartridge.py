@@ -7,11 +7,14 @@ class Cartridge:
     """A generic cartridge class to handle common operations for all ROM/cartridge types
     """
     def __init__(self, rom_stream=None):
-        self.rom_stream = rom_stream
 
+        # if no ROM stream was specified, create an empty one
         try:
+            rom_stream.seek(0)
             self._rom_size = rom_stream.getbuffer().nbytes
+            self.rom_stream = rom_stream
         except AttributeError:
+            self.rom_stream = io.BytesIO()
             self._rom_size = 0
 
         self._md5_hex_str = None
