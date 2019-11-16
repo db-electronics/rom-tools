@@ -61,6 +61,11 @@ class Cartridge:
     def md5_bytes(self):
         return self._md5_bytes
 
+    def load_rom(self, file_name):
+        self._rom_size = os.path.getsize(file_name)
+        with open(file_name, "rb") as f:
+            self.rom_stream.write(f.read(self._rom_size))
+
     def read_rom(self, size=None, address=None):
         if size is None:
             size = 1

@@ -15,16 +15,23 @@ class Genesis(Cartridge):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.get_info_from_rom()
+        self._domestic_name = ""
 
-        # check if we were instantiated without a rom stream
+    def __str__(self):
+        return "{} - {} bytes".format(self._domestic_name, self.rom_size)
+
+    def __repr__(self):
+        return "Genesis('{}')".format(self._domestic_name)
+
+    def load_rom(self, file_name):
+        super().load_rom(file_name)
+        self.get_info_from_rom()
+
+    def get_info_from_rom(self):
         if self.rom_size != 0:
             self.calculate_checksum()
             self.read_header()
-        else:
-            self._domestic_name = "None"
-
-    def __str__(self):
-        return "Genesis\\Megadrive\n{}\n{} bytes".format(self._domestic_name, self.rom_size)
 
     def convert_endianness(self, out_stream):
         # size of input stream
@@ -93,7 +100,7 @@ class Genesis(Cartridge):
         self._header.update({"Copyright": self.rom_stream.read(16).decode("utf-8", "replace")})
         # get domestic name
         self._header.update({"Domestic Name": self.rom_stream.read(48).decode("utf-8", "replace")})
-        self._domestic_name = self._header["Domestic Name"]
+        self._domestic_name = self._header["Domestic Name"].strip()
         # get overseas name
         self._header.update({"Overseas Name": self.rom_stream.read(48).decode("utf-8", "replace")})
         # get serial number
