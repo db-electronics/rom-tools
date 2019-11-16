@@ -15,8 +15,8 @@ class Genesis(Cartridge):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.get_info_from_rom()
         self._domestic_name = ""
+        self.get_info_from_rom()
 
     def __str__(self):
         return "{} - {} bytes".format(self._domestic_name, self.rom_size)

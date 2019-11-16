@@ -6,7 +6,7 @@ import hashlib
 class Cartridge:
     """A generic cartridge class to handle common operations for all ROM/cartridge types
     """
-    def __init__(self, rom_stream=None):
+    def __init__(self, rom_stream=None, file_name=None):
 
         # if no ROM stream was specified, create an empty one
         try:
@@ -16,6 +16,11 @@ class Cartridge:
         except AttributeError:
             self.rom_stream = io.BytesIO()
             self._rom_size = 0
+
+        if file_name is not None:
+            self._file_name = os.path.abspath(file_name)
+        else:
+            self._file_name = None
 
         self._md5_hex_str = None
         self._md5_bytes = None
@@ -31,7 +36,7 @@ class Cartridge:
         in_stream = io.BytesIO()
         with open(file_name, "rb") as f:
             in_stream.write(f.read(rom_size))
-        return cls(in_stream)
+        return cls(in_stream, file_name)
 
     @classmethod
     def create_from_stream(cls, stream):
