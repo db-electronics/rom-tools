@@ -145,3 +145,39 @@ class Genesis(Cartridge):
         self._header.update({"Country Support": self.rom_stream.read(16).decode("utf-8", "replace")})
 
         return self._header
+
+
+class Header:
+
+    start_offset = 0x100
+    header_values = {
+        "console_name":     {"size": 16, "type": str},
+        "copyright":        {"size": 16, "type": str},
+        "domestic_name":    {"size": 48, "type": str},
+        "overseas_name":    {"size": 48, "type": str},
+        "serial_number":    {"size": 14, "type": str},
+        "checksum":         {"size": 2,  "type": int, "byteorder": "big"},
+        "io_support":       {"size": 16, "type": str},
+        "rom_begin":        {"size": 4,  "type": int, "byteorder": "big"},
+        "rom_end":          {"size": 4,  "type": int, "byteorder": "big"},
+        "ram_begin":        {"size": 4,  "type": int, "byteorder": "big"},
+        "ram_end":          {"size": 4,  "type": int, "byteorder": "big"},
+        "sram_support":     {"size": 4,  "type": str},
+        "sram_begin":       {"size": 4,  "type": int, "byteorder": "big"},
+        "sram_end":         {"size": 4,  "type": int, "byteorder": "big"},
+        "modem_support":    {"size": 12, "type": str},
+        "memo":             {"size": 40, "type": str},
+        "country_support":  {"size": 16, "type": str},
+    }
+
+    def __init__(self, rom_stream=None):
+        self.header_decoded = {}
+        self.rom_stream = rom_stream
+
+    def parse(self):
+        self.header_decoded.clear()
+        for key, val in Header.header_values.items():
+            if val["type"] == str:
+                self.header_decoded.update({key: self.rom_stream.read(val["size"]).decode("utf-8", "replace")})
+            elif val["type"] == int:
+                self.header_decoded.update({key: int.from_bytes(self.rom_stream.read(val["size"]), byteorder="big")})
