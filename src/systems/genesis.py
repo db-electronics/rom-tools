@@ -1,11 +1,11 @@
-import os
-import io
 import struct
 from src.systems.cartridge import Cartridge
 
 
 class Genesis(Cartridge):
-
+    """
+    A Sega Genesis/Megadrive cartridge handler
+    """
     header_start_address = 0x100
     header_checksum_address = 0x18E
     header_size = 0x100
@@ -14,6 +14,11 @@ class Genesis(Cartridge):
     file_read_chunk_size = 1024
 
     def __init__(self, *args, **kwargs):
+        """
+        Constructor - calls the parent __init__ and then attempts to read data from the ROM header
+        :param args:
+        :param kwargs:
+        """
         super().__init__(*args, **kwargs)
         self._domestic_name = ""
         self.get_info_from_rom()
@@ -22,16 +27,18 @@ class Genesis(Cartridge):
         return "{} - {} bytes".format(self._domestic_name, self.rom_size)
 
     def __repr__(self):
-        return "Genesis('{}')".format(self._domestic_name)
+        return "Genesis('{}')".format(self._file_name)
 
     def load_rom(self, file_name):
         super().load_rom(file_name)
         self.get_info_from_rom()
 
     def get_info_from_rom(self):
-        if self.rom_size != 0:
+        if self.rom_size < Genesis.header_size:
             self.calculate_checksum()
             self.read_header()
+        else:
+            raise ValueError("ROM size ({}) is less than the Sega Genesis/Megadrive header size".format(self.rom_size))
 
     def convert_endianness(self, out_stream):
         # size of input stream
