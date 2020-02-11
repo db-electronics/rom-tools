@@ -6,6 +6,11 @@ import argparse
 # Main
 ###############################################################################
 if __name__ == "__main__":
+
+    systems_dict = {"gen": "Sega Genesis/Megadrive",
+                    "sms": "Sega Master System"
+                    }
+
     parser = argparse.ArgumentParser(prog="rom-tools 0.0.0.1")
 
     parser.add_argument("-i"
@@ -15,6 +20,12 @@ if __name__ == "__main__":
                         type=str,
                         required=True
                         )
+
+    parser.add_argument("-s", "--system",
+                        help="Set the system type",
+                        choices=[v for v in systems_dict],
+                        type=str,
+                        required=True)
 
     parser.add_argument("-o"
                         "--ofile",
@@ -30,5 +41,4 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-
 
